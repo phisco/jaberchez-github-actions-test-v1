@@ -54,7 +54,8 @@ jobs:
           do
              if [ -e "$item" ]; then
                 modules[$idx]="\"$item\","
-                (( idx++ ))
+                #(( idx++ ))
+                let "idx=idx+1"
              fi
           done
 
