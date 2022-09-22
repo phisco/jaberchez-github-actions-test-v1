@@ -48,7 +48,7 @@ jobs:
         if: ${{ github.event.pull_request.merged == true && steps.filter.outputs.modules_count > 0 }}
         run: |
           idx=0
-          modulesOrig=($(echo "${{ steps.filter.outputs.modules_files }}" | jq -rc '.[]' ))
+          modulesOrig=($(echo '${{ steps.filter.outputs.modules_files }}' | jq -rc '.[]' ))
 
           for item in "${modulesOrig[@]}"
           do
