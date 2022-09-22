@@ -60,6 +60,8 @@ jobs:
 
           modules[${#modules[@]} - 1]="$(echo ${modules[${#modules[@]} - 1]} | sed 's/,$//')"
 
+          echo "${modules[@]}"
+
           #modules=$(echo '${{ steps.filter.outputs.modules_files }}' | jq -c -r '[.[] | sub("/version";"") | sub("terraform-modules/";"")]')
           modules=$(echo "[${modules[@]}]" | jq -c -r '[.[] | sub("/version";"") | sub("terraform-modules/";"")]')
           echo "::set-output name=modules::${modules}"
