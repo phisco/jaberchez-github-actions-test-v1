@@ -32,7 +32,7 @@ jobs:
           list-files: json
           filters: |
             modules: 
-              - terraform-modules/*/*/version
+              - added|modified: terraform-modules/*/*/version
 
       # Create an output removing "/version" and "terraform-modules/" strings from the path
       # Example of what we get from the previous step: terraform-modules/google/gke-cluster/version
