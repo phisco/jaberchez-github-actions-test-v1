@@ -1,0 +1,67 @@
+name: tf-module-publish
+
+#on: push
+on:
+  pull_request:
+    branches: ['main']
+    types: ['closed']
+  
+defaults:
+  run:
+    shell: 'bash -Eeuo pipefail -x {0}'
+
+jobs:
+  # Check whether version file has changed in any module
+  change-detection:
+    name: Detect any changed Terraform modules
+    runs-on: ubuntu-latest
+
+    outputs:
+      changed-modules-count: ${{ steps.filter.outputs.modules_count }}
+      modules-folder: ${{ steps.jq.outputs.modules }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get changes
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          base: main
+          list-files: json
+          filters: |
+            modules: 
+              - terraform-modules/*/*/version
+
+      # Create an output removing "/version" and "terraform-modules/" strings from the path
+      # Example of what we get from the previous step: terraform-modules/google/gke-cluster/version
+      # "/version" and "terraform-modules/" strings are removed for creating the right matrix
+#      - name: Set outputs
+#        if: ${{ github.event.pull_request.merged == true && steps.filter.outputs.modules_count > 0 }}
+#        run: |
+#          modules=$(echo '${{ steps.filter.outputs.modules_files }}' | jq -c -r '[.[] | sub("/version";"") | sub("terraform-modules/";"")]')
+#          echo "::set-output name=modules::${modules}"
+#        id: jq
+
+      - name: Set outputs
+        if: ${{ github.event.pull_request.merged == true && steps.filter.outputs.modules_count > 0 }}
+        run: |
+          idx=0
+          modulesOrig=($(echo "${{ steps.filter.outputs.modules_files }}" | jq -rc '.[]' ))
+
+          for item in "${modulesOrig[@]}"
+          do
+             if [ -e "$item" ]; then
+                modules[$idx]="\"$item\","
+                (( idx++ ))
+             fi
+          done
+
+          modules[${#modules[@]} - 1]="$(echo ${modules[${#modules[@]} - 1]} | sed 's/,$//')"
+
+          #modules=$(echo '${{ steps.filter.outputs.modules_files }}' | jq -c -r '[.[] | sub("/version";"") | sub("terraform-modules/";"")]')
+          modules=$(echo "[${modules[@]}]" | jq -c -r '[.[] | sub("/version";"") | sub("terraform-modules/";"")]')
+          echo "::set-output name=modules::${modules}"
+        id: jq
+
